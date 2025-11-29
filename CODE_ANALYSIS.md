@@ -283,14 +283,17 @@ The `adaptive` parameter controls data layout:
 
 ```cpp
 IVF::IVF(const Matrix<float> &X, const Matrix<float> &_centroids, int adaptive) {
-    // ... clustering logic ...
+    // ... clustering logic assigns vectors to clusters ...
+    // id[i] = original index of i-th vector in clustered order
     
     if(adaptive == 1) d = 32;        // IVF++: optimize cache
     else if(adaptive == 0) d = D;    // IVF: plain scan
     else d = 0;                      // IVF+: plain ADSampling
     
     // Store first d dimensions in L1_data, remaining in res_data
+    // Note: vectors are stored in clustered order for better locality
     for(int i=0; i<N; i++) {
+        int x = id[i];  // x = original index in X
         for(int j=0; j<D; j++) {
             if(j < d) L1_data[i*d + j] = X.data[x*D + j];
             else res_data[i*(D-d) + j-d] = X.data[x*D + j];
